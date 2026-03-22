@@ -233,19 +233,32 @@ export default function OfficeSidebar({ office, onClose, allOffices = [] }: Offi
 
         {/* ── ChatJurídico (Plus) ── */}
         {office.is_plus && office.chat_juridico_client && (
-          <div className="mt-6 pt-6 border-t border-[#1e1e1e] flex items-center gap-2.5">
-            <div className="w-5 h-5 rounded-full bg-emerald-950/40 flex items-center justify-center flex-shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-500">
-                <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          <a
+            href="https://chatjuridico.com.br?utm_source=top_escritorio&utm_medium=sidebar&utm_campaign=office_profile"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 flex items-center gap-3.5 px-4 py-3.5 bg-gradient-to-r from-[#0a1a12] to-[#0f1a18] border border-emerald-900/30 rounded-xl hover:border-emerald-800/40 transition-all group"
+          >
+            {/* ChatJuridico icon SVG inline */}
+            <div className="w-9 h-9 rounded-lg bg-emerald-950/60 border border-emerald-800/20 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-950/80 transition-colors">
+              <svg width="20" height="20" viewBox="0 0 1262 1262" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M631.501 204.475C879.355 204.475 1081 385.954 1081 609.025C1081 832.097 879.355 1013.58 631.501 1013.58C567.642 1013.58 505.971 1001.75 448.061 978.395C346.114 1037.22 205.15 1057.52 199.082 1058.38C198.378 1058.48 197.674 1058.53 196.984 1058.53C191.366 1058.53 186.136 1055.36 183.574 1050.22C180.697 1044.47 181.837 1037.5 186.392 1032.95C220.853 998.501 244.587 925.788 253.442 827.842C206.679 762.545 182.001 687.014 182.001 609.025C182.001 385.954 383.647 204.475 631.501 204.475ZM658.716 331.244C652.366 320.411 638.436 316.776 627.603 323.126C625.735 324.221 624.081 325.541 622.655 327.031C619.676 328.834 617.067 331.351 615.108 334.516L402.739 677.729C400.672 681.069 399.575 684.735 399.369 688.399C397.935 695.873 400.649 704.124 408.721 709.012L621.752 838.009C628.339 841.997 636.663 841.997 643.25 838.009L856.28 709.012C865.011 703.725 867.475 694.502 865.199 686.586C864.765 683.878 863.832 681.204 862.362 678.695L658.716 331.244ZM805.729 672H459.76L637.432 384.86L805.729 672Z" fill="#34d399"/>
               </svg>
             </div>
-            <p className="text-[#888] text-xs">
-              Potencializado por{' '}
-              <a href="https://chatjuridico.com.br" target="_blank" rel="noopener noreferrer" className="text-emerald-500 hover:text-emerald-400 transition-colors">
+            <div className="flex-1 min-w-0">
+              <p className="text-emerald-400 text-xs font-semibold tracking-wide group-hover:text-emerald-300 transition-colors">
                 ChatJuridico.com.br
-              </a>
-            </p>
-          </div>
+              </p>
+              <p className="text-[#667] text-[10px] mt-0.5">
+                Potencializado por IA jurídica
+              </p>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#444] group-hover:text-emerald-500/50 transition-colors flex-shrink-0">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+          </a>
         )}
 
         {/* ── Unverified CTA ── */}

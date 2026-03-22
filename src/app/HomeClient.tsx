@@ -218,7 +218,7 @@ export default function HomeClient() {
               top<span className="text-[#999]">.escritorio</span><span className="text-[#ccc]">.ai</span>
             </h1>
             <a
-              href="https://chatjuridico.com.br"
+              href="https://chatjuridico.com.br?utm_source=top_escritorio&utm_medium=header&utm_campaign=brand_badge"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-black/40 backdrop-blur-sm border border-white/[0.1] rounded-full hover:bg-black/60 transition-all group"

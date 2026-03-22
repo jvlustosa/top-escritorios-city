@@ -63,19 +63,19 @@ function BuildingIllustration() {
   return (
     <div className="flex flex-col items-center justify-end h-48">
       {/* Simple building silhouette */}
-      <div className="w-[2px] h-5 bg-[#444]" />
-      <div className="w-16 h-20 bg-[#222] border border-[#333]" />
-      <div className="w-24 h-28 bg-[#222] border border-[#333] border-t-0" />
-      <div className="w-28 h-1 bg-[#333]" />
+      <div className="w-[2px] h-5 bg-[#666]" />
+      <div className="w-16 h-20 bg-[#2a2a2a] border border-[#444]" />
+      <div className="w-24 h-28 bg-[#2a2a2a] border border-[#444] border-t-0" />
+      <div className="w-28 h-1 bg-[#444]" />
     </div>
   );
 }
 
 function RankingIllustration() {
   const bars = [
-    { label: '3º', h: 48, color: '#333' },
+    { label: '3º', h: 48, color: '#666' },
     { label: '1º', h: 96, color: '#fff' },
-    { label: '2º', h: 72, color: '#444' },
+    { label: '2º', h: 72, color: '#999' },
   ];
   return (
     <div className="flex items-end justify-center gap-4 h-48">
@@ -200,24 +200,24 @@ export default function OnboardingPage() {
   return (
     <main className="min-h-screen bg-black flex flex-col">
       {/* Nav */}
-      <nav className="border-b border-[#111] px-6 py-4 flex items-center justify-between">
-        <span className="text-white text-lg font-semibold tracking-tight">
+      <nav className="border-b border-[#111] px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+        <span className="text-white text-base sm:text-lg font-semibold tracking-tight">
           top<span className="text-[#555]">.escritorio</span>
           <span className="text-[#888]">.ai</span>
         </span>
         <button
           onClick={completeTour}
-          className="text-[#666] text-sm hover:text-white transition-colors"
+          className="text-[#888] text-xs sm:text-sm hover:text-white transition-colors"
         >
           Pular tour
         </button>
       </nav>
 
       {/* Content — centered */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-16">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 py-8 sm:py-16">
         <div className="w-full max-w-xl">
           {/* Illustration */}
-          <div className="mb-12 border border-[#111] bg-[#050505] p-8 rounded">
+          <div className="mb-8 sm:mb-12 border border-[#111] bg-[#050505] p-4 sm:p-8 rounded">
             <StepIllustration type={current.illustration} />
           </div>
 
@@ -226,12 +226,18 @@ export default function OnboardingPage() {
             <span className="text-white text-xs font-bold bg-[#222] px-2.5 py-1 rounded-full">
               {step + 1}/{steps.length}
             </span>
+            <span className="text-[#777] text-xs uppercase tracking-widest">
+              {step === 0 && 'A cidade'}
+              {step === 1 && 'Os prédios'}
+              {step === 2 && 'O ranking'}
+              {step === 3 && 'Seu escritório'}
+            </span>
           </div>
 
           {/* Title */}
           <h1
             key={`title-${step}`}
-            className="text-white text-4xl font-bold tracking-tight animate-fade-in leading-tight"
+            className="text-white text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight animate-fade-in leading-tight"
           >
             {current.title}
           </h1>
@@ -239,17 +245,17 @@ export default function OnboardingPage() {
           {/* Description */}
           <p
             key={`desc-${step}`}
-            className="text-[#888] text-lg mt-4 leading-relaxed animate-fade-in max-w-lg"
+            className="text-[#ccc] text-sm sm:text-base md:text-lg mt-3 sm:mt-4 leading-relaxed animate-fade-in max-w-lg"
           >
             {current.description}
           </p>
 
           {/* Actions */}
-          <div className="mt-10 flex items-center gap-3">
+          <div className="mt-8 sm:mt-10 flex flex-wrap items-center gap-3">
             {step > 0 && (
               <button
                 onClick={handlePrev}
-                className="px-6 py-3.5 border border-[#333] text-white text-sm font-medium hover:bg-[#111] transition-colors"
+                className="px-5 sm:px-6 py-3 sm:py-3.5 border border-[#333] text-white text-sm font-medium rounded-lg hover:bg-[#111] transition-colors"
               >
                 Voltar
               </button>
@@ -257,7 +263,7 @@ export default function OnboardingPage() {
 
             <button
               onClick={handleNext}
-              className="px-10 py-3.5 bg-white text-black text-sm font-bold hover:bg-[#e0e0e0] transition-colors"
+              className="px-8 sm:px-10 py-3 sm:py-3.5 bg-white text-black text-sm font-bold rounded-lg hover:bg-[#e0e0e0] transition-colors"
             >
               {isLast ? 'Registrar meu escritório' : 'Próximo'}
             </button>
@@ -265,7 +271,7 @@ export default function OnboardingPage() {
             {isLast && (
               <button
                 onClick={completeTour}
-                className="px-6 py-3.5 text-[#666] text-sm hover:text-white transition-colors"
+                className="px-5 sm:px-6 py-3 sm:py-3.5 text-[#888] text-sm hover:text-white transition-colors"
               >
                 Só explorar
               </button>
@@ -291,7 +297,7 @@ export default function OnboardingPage() {
       {/* Footer attribution */}
       <div className="px-6 py-4 border-t border-[#111]">
         <a
-          href="https://chatjuridico.com.br"
+          href="https://chatjuridico.com.br?utm_source=top_escritorio&utm_medium=onboarding&utm_campaign=footer_badge"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-2.5 py-1 bg-white/[0.04] border border-white/[0.06] rounded-full hover:bg-white/[0.08] transition-all group"
