@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getServiceSupabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
+import {
+  OFFICES_SELECT_MEMBER,
+  OFFICES_SELECT_PUBLIC,
+} from '@/lib/offices-columns';
 
 const stateCapitals: Record<string, string> = {
   AC: 'Rio Branco', AL: 'Maceió', AP: 'Macapá', AM: 'Manaus',
@@ -50,7 +56,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('offices')
       .insert({ name, slug, city, state, oab_number, email })
-      .select()
+      .select(OFFICES_SELECT_MEMBER)
       .single();
 
     if (error) {
@@ -98,7 +104,7 @@ export async function PATCH(request: NextRequest) {
       .from('offices')
       .update(updates)
       .eq('slug', slug)
-      .select()
+      .select(OFFICES_SELECT_MEMBER)
       .single();
 
     if (error) {
@@ -116,28 +122,56 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function GET() {
-  const supabase = getServiceSupabase();
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const [vRes, uRes] = user
+    ? await Promise.all([
+        supabase
+          .from('offices')
+          .select(OFFICES_SELECT_MEMBER)
+          .eq('verified', true)
+          .order('tier', { ascending: false })
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('offices')
+          .select(OFFICES_SELECT_MEMBER)
+          .eq('verified', false)
+          .order('created_at', { ascending: true }),
+      ])
+    : await Promise.all([
+        supabase
+          .from('offices')
+          .select(OFFICES_SELECT_PUBLIC)
+          .eq('verified', true)
+          .order('tier', { ascending: false })
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('offices')
+          .select(OFFICES_SELECT_PUBLIC)
+          .eq('verified', false)
+          .order('created_at', { ascending: true }),
+      ]);
 
-  const { data: verified, error: e1 } = await supabase
-    .from('offices')
-    .select('*')
-    .eq('verified', true)
-    .order('tier', { ascending: false })
-    .order('created_at', { ascending: true });
-
-  const { data: unverified, error: e2 } = await supabase
-    .from('offices')
-    .select('*')
-    .eq('verified', false)
-    .order('created_at', { ascending: true });
+  const { data: verified, error: e1 } = vRes;
+  const { data: unverified, error: e2 } = uRes;
 
   if (e1 || e2) {
     console.error('Supabase query error:', e1 || e2);
     return NextResponse.json({ error: (e1 || e2)!.message }, { status: 500 });
   }
 
-  const ranked = (verified ?? []).map((o, i) => ({ ...o, rank: i + 1 }));
-  const unranked = (unverified ?? []).map((o) => ({ ...o, rank: null }));
+  type Row = Record<string, unknown>;
+  const ranked = ((verified ?? []) as unknown as Row[]).map((o, i) => ({
+    ...o,
+    rank: i + 1,
+  }));
+  const unranked = ((unverified ?? []) as unknown as Row[]).map((o) => ({
+    ...o,
+    rank: null,
+  }));
 
   return NextResponse.json([...ranked, ...unranked]);
 }

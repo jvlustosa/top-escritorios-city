@@ -1,5 +1,7 @@
-import { getServiceSupabase } from '@/lib/supabase';
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
+import { OFFICES_SELECT_MEMBER, OFFICES_SELECT_PUBLIC } from '@/lib/offices-columns';
+import { createClient } from '@/utils/supabase/server';
 import { PRACTICE_AREAS } from '@/data/practice-areas';
 import LocationMapWrapper from './LocationMapWrapper';
 
@@ -46,12 +48,22 @@ function TierBuilding({ tier, verified, label }: { tier: number; verified: boole
 }
 
 export default async function OfficePage({ params }: { params: { slug: string } }) {
-  const supabase = getServiceSupabase();
-  const { data: office, error } = await supabase
-    .from('offices')
-    .select('*')
-    .eq('slug', params.slug)
-    .single();
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: office, error } = user
+    ? await supabase
+        .from('offices')
+        .select(OFFICES_SELECT_MEMBER)
+        .eq('slug', params.slug)
+        .single()
+    : await supabase
+        .from('offices')
+        .select(OFFICES_SELECT_PUBLIC)
+        .eq('slug', params.slug)
+        .single();
 
   if (error || !office) {
     notFound();

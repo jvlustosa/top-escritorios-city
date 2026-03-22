@@ -35,3 +35,13 @@ h1, h2, h3, h4, h5, h6 {
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out forwards;
 }
+
+@keyframes growUp {
+  from { transform: scaleY(0); opacity: 0; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+
+.animate-grow-up {
+  transform-origin: bottom;
+  animation: growUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}

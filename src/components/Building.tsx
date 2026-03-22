@@ -2,7 +2,7 @@
 
 import { useRef, useState, useMemo } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
+import { Html, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { RankedOffice } from '@/data/mock-offices';
 
@@ -10,6 +10,7 @@ interface BuildingProps {
   office: RankedOffice;
   position: [number, number, number];
   onClick: (office: RankedOffice) => void;
+  onHelicopterClick?: () => void;
   index: number;
   day: number; // 0 = night, 1 = noon
 }
@@ -22,11 +23,162 @@ function seededRandom(seed: number) {
   };
 }
 
+// ─── Mini helicopter for featured helipad ─────────────────────────────────────
+
+function MiniHelicopter({ position, isDay, onClick }: { position: [number, number, number]; isDay: boolean; onClick?: () => void }) {
+  const mainRotorRef = useRef<THREE.Group>(null);
+  const tailRotorRef = useRef<THREE.Group>(null);
+
+  useFrame((_, delta) => {
+    if (mainRotorRef.current) mainRotorRef.current.rotation.y += delta * 10;
+    if (tailRotorRef.current) tailRotorRef.current.rotation.x += delta * 15;
+  });
+
+  const bodyColor = '#1a1a1a';
+  const metalColor = '#555';
+  const bladeColor = '#444';
+
+  return (
+    <group position={position} scale={0.32} rotation={[0, 0.6, 0]} onClick={(e) => { e.stopPropagation(); onClick?.(); }} onPointerOver={() => { document.body.style.cursor = 'pointer'; }} onPointerOut={() => { document.body.style.cursor = 'auto'; }}>
+      {/* Fuselage */}
+      <mesh castShadow>
+        <boxGeometry args={[0.5, 0.25, 0.28]} />
+        <meshStandardMaterial color={bodyColor} metalness={0.3} roughness={0.5} />
+      </mesh>
+
+      {/* Cockpit nose — tapered */}
+      <mesh position={[0.3, -0.01, 0]} castShadow>
+        <boxGeometry args={[0.18, 0.2, 0.26]} />
+        <meshStandardMaterial color={bodyColor} metalness={0.3} roughness={0.5} />
+      </mesh>
+
+      {/* Windshield */}
+      <mesh position={[0.4, 0.02, 0]}>
+        <boxGeometry args={[0.01, 0.13, 0.2]} />
+        <meshStandardMaterial color="#6badd4" transparent opacity={0.6} metalness={0.8} roughness={0.1} />
+      </mesh>
+
+      {/* Tail boom */}
+      <mesh position={[-0.52, 0.02, 0]} castShadow>
+        <boxGeometry args={[0.55, 0.09, 0.09]} />
+        <meshStandardMaterial color={bodyColor} metalness={0.3} roughness={0.5} />
+      </mesh>
+
+      {/* Tail fin */}
+      <mesh position={[-0.78, 0.12, 0]} castShadow>
+        <boxGeometry args={[0.06, 0.16, 0.03]} />
+        <meshStandardMaterial color={bodyColor} metalness={0.3} roughness={0.5} />
+      </mesh>
+
+      {/* Horizontal stabilizer */}
+      <mesh position={[-0.75, 0.04, 0]} castShadow>
+        <boxGeometry args={[0.08, 0.02, 0.2]} />
+        <meshStandardMaterial color={bodyColor} metalness={0.3} roughness={0.5} />
+      </mesh>
+
+      {/* Main rotor mast */}
+      <mesh position={[0, 0.17, 0]}>
+        <cylinderGeometry args={[0.03, 0.03, 0.08, 6]} />
+        <meshStandardMaterial color={metalColor} metalness={0.8} roughness={0.2} />
+      </mesh>
+
+      {/* Main rotor blades */}
+      <group ref={mainRotorRef} position={[0, 0.22, 0]}>
+        <mesh>
+          <boxGeometry args={[1.4, 0.012, 0.06]} />
+          <meshStandardMaterial color={bladeColor} metalness={0.5} roughness={0.3} />
+        </mesh>
+        <mesh rotation={[0, Math.PI / 2, 0]}>
+          <boxGeometry args={[1.4, 0.012, 0.06]} />
+          <meshStandardMaterial color={bladeColor} metalness={0.5} roughness={0.3} />
+        </mesh>
+      </group>
+
+      {/* Tail rotor hub */}
+      <mesh position={[-0.78, 0.12, 0.035]}>
+        <cylinderGeometry args={[0.015, 0.015, 0.02, 6]} />
+        <meshStandardMaterial color={metalColor} metalness={0.8} roughness={0.2} />
+      </mesh>
+
+      {/* Tail rotor blades */}
+      <group ref={tailRotorRef} position={[-0.78, 0.12, 0.05]}>
+        <mesh>
+          <boxGeometry args={[0.012, 0.1, 0.008]} />
+          <meshStandardMaterial color={bladeColor} metalness={0.5} roughness={0.3} />
+        </mesh>
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <boxGeometry args={[0.012, 0.1, 0.008]} />
+          <meshStandardMaterial color={bladeColor} metalness={0.5} roughness={0.3} />
+        </mesh>
+      </group>
+
+      {/* Landing skids */}
+      <mesh position={[0, -0.2, 0.12]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.008, 0.008, 0.45, 4]} />
+        <meshStandardMaterial color={metalColor} metalness={0.7} roughness={0.3} />
+      </mesh>
+      <mesh position={[0, -0.2, -0.12]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.008, 0.008, 0.45, 4]} />
+        <meshStandardMaterial color={metalColor} metalness={0.7} roughness={0.3} />
+      </mesh>
+
+      {/* Skid struts */}
+      {[
+        [0.1, -0.16, 0.12],
+        [-0.1, -0.16, 0.12],
+        [0.1, -0.16, -0.12],
+        [-0.1, -0.16, -0.12],
+      ].map((pos, i) => (
+        <mesh key={`strut-${i}`} position={pos as [number, number, number]}>
+          <cylinderGeometry args={[0.006, 0.006, 0.08, 4]} />
+          <meshStandardMaterial color={metalColor} metalness={0.7} roughness={0.3} />
+        </mesh>
+      ))}
+
+      {/* Adv10x logo — left side */}
+      <Text
+        position={[0.05, 0.02, 0.145]}
+        rotation={[0, 0, 0]}
+        fontSize={0.07}
+        color="#7BA7C9"
+        anchorX="center"
+        anchorY="middle"
+        fontWeight="bold"
+      >
+        Adv10x
+      </Text>
+      {/* Adv10x logo — right side */}
+      <Text
+        position={[0.05, 0.02, -0.145]}
+        rotation={[0, Math.PI, 0]}
+        fontSize={0.07}
+        color="#7BA7C9"
+        anchorX="center"
+        anchorY="middle"
+        fontWeight="bold"
+      >
+        Adv10x
+      </Text>
+
+      {/* Navigation lights */}
+      <mesh position={[0.39, -0.05, 0]}>
+        <sphereGeometry args={[0.015, 6, 6]} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={isDay ? 0 : 2.0} />
+      </mesh>
+      <mesh position={[-0.79, 0.2, 0]}>
+        <sphereGeometry args={[0.012, 6, 6]} />
+        <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={isDay ? 0 : 1.5} />
+      </mesh>
+    </group>
+  );
+}
+
 // ─── Building shapes ──────────────────────────────────────────────────────────
 
-type BuildingShape = 'box' | 'cylinder' | 'hexagon' | 'lshape';
+type BuildingShape = 'box' | 'cylinder' | 'hexagon' | 'lshape' | 'featured';
 
-function getBuildingShape(index: number): BuildingShape {
+function getBuildingShape(index: number, isFeatured?: boolean): BuildingShape {
+  if (isFeatured) return 'featured';
   const r = seededRandom(index * 317 + 41);
   const v = r();
   if (v < 0.40) return 'box';
@@ -122,6 +274,26 @@ function FacadeBillboard({ url, w, d, h, placement }: { url: string; w: number; 
         />
       </mesh>
 
+      {/* ── Billboard light fixtures — small hoods on top frame aiming down ── */}
+      {[-boardW * 0.25, 0, boardW * 0.25].map((lx, li) => (
+        <group key={`blight-${li}`} position={[lx, boardH / 2 + 0.025, boardD / 2 + 0.015]}>
+          {/* Light hood */}
+          <mesh rotation={[0.3, 0, 0]}>
+            <boxGeometry args={[0.03, 0.015, 0.025]} />
+            <meshStandardMaterial color="#555" metalness={0.8} roughness={0.3} />
+          </mesh>
+          {/* Emissive bulb face */}
+          <mesh position={[0, -0.005, 0.005]} rotation={[0.3, 0, 0]}>
+            <planeGeometry args={[0.025, 0.008]} />
+            <meshStandardMaterial
+              color="#fffae0"
+              emissive="#fffae0"
+              emissiveIntensity={2.0}
+            />
+          </mesh>
+        </group>
+      ))}
+
       {/* ── Support structure ── */}
       {!isSide ? (
         <>
@@ -178,7 +350,7 @@ function FacadeBillboard({ url, w, d, h, placement }: { url: string; w: number; 
 
 // ─── Main Building ─────────────────────────────────────────────────────────────
 
-export default function Building({ office, position, onClick, index, day }: BuildingProps) {
+export default function Building({ office, position, onClick, onHelicopterClick, index, day }: BuildingProps) {
   const groupRef = useRef<THREE.Group>(null);
   const outlineRef = useRef<THREE.Group>(null);
   const plusGlowRef = useRef<THREE.MeshStandardMaterial>(null);
@@ -189,9 +361,10 @@ export default function Building({ office, position, onClick, index, day }: Buil
   const rand = useMemo(() => seededRandom(index * 137 + 7), [index]);
 
   const { w, d, h } = useMemo(() => {
+    if (office.is_featured) return { w: 1.4, d: 1.4, h: 7.0 };
     const r = seededRandom(index * 137 + 7);
     return getTierProps(office.tier, r);
-  }, [office.tier, index]);
+  }, [office.tier, index, office.is_featured]);
 
   const billboardPlacement = useMemo((): BillboardPlacement => {
     const r = seededRandom(index * 251 + 13);
@@ -201,11 +374,13 @@ export default function Building({ office, position, onClick, index, day }: Buil
     return 'right';
   }, [index]);
 
-  const shape = useMemo(() => getBuildingShape(index), [index]);
+  const shape = useMemo(() => getBuildingShape(index, office.is_featured), [index, office.is_featured]);
 
   const hasBillboard = office.logo_url && office.tier >= 2;
   const billboardOnTop = hasBillboard && billboardPlacement === 'top';
-  const tooltipY = h + (billboardOnTop ? w * 0.35 + 0.5 : 0.4) + (office.chat_juridico_client ? 0.4 : 0);
+  const tooltipY = shape === 'featured'
+    ? h + 3.2
+    : h + (billboardOnTop ? w * 0.35 + 0.5 : 0.4) + (office.chat_juridico_client ? 0.4 : 0);
 
   // Radius for cylindrical/hex shapes
   const radius = Math.max(w, d) * 0.5;
@@ -213,6 +388,7 @@ export default function Building({ office, position, onClick, index, day }: Buil
   const outlineGeom = useMemo(() => {
     if (shape === 'cylinder') return new THREE.CylinderGeometry(radius + 0.02, radius + 0.02, h, 16);
     if (shape === 'hexagon') return new THREE.CylinderGeometry(radius + 0.02, radius + 0.02, h, 6);
+    if (shape === 'featured') return new THREE.BoxGeometry(w + 0.06, h + 2.0, d + 0.06);
     return new THREE.BoxGeometry(w + 0.04, h, d + 0.04);
   }, [w, h, d, radius, shape]);
 
@@ -285,10 +461,13 @@ export default function Building({ office, position, onClick, index, day }: Buil
     return result;
   }, [w, d, h, office.tier, index, shape, radius]);
 
-  // Body color by tier
-  const bodyColor = office.tier >= 4 ? '#c0ccd8' : office.tier === 3 ? '#c0b8a8' : '#b0b0b0';
-  const bodyMetal = office.tier >= 4 ? 0.4 : 0.1;
-  const bodyRough = office.tier >= 4 ? 0.15 : 0.7;
+  // Body material by tier — realistic concrete to glass curtain wall
+  // Tier 1-2: raw/painted concrete — warm gray, very rough, no metalness
+  // Tier 3: polished concrete with slight sheen
+  // Tier 4-5: glass + steel curtain wall — reflective, low roughness
+  const bodyColor = office.tier >= 4 ? '#b8c4d0' : office.tier === 3 ? '#a8a098' : office.tier === 2 ? '#9a9590' : '#8a8580';
+  const bodyMetal = office.tier >= 4 ? 0.35 : office.tier === 3 ? 0.08 : 0.02;
+  const bodyRough = office.tier >= 4 ? 0.18 : office.tier === 3 ? 0.55 : office.tier === 2 ? 0.78 : 0.88;
 
   // Day: blueish glass reflection, lights off. Night: warm lit windows.
   const isDay = day > 0.5;
@@ -372,13 +551,27 @@ export default function Building({ office, position, onClick, index, day }: Buil
         {shape === 'cylinder' && (
           <mesh position={[0, h / 2, 0]} castShadow>
             <cylinderGeometry args={[radius, radius, h, 24]} />
-            <meshStandardMaterial color={bodyColor} metalness={bodyMetal} roughness={bodyRough} />
+            <meshPhysicalMaterial
+              color={bodyColor}
+              metalness={bodyMetal}
+              roughness={bodyRough}
+              clearcoat={office.tier >= 4 ? 0.4 : 0}
+              clearcoatRoughness={0.3}
+              envMapIntensity={office.tier >= 4 ? 1.2 : 0.4}
+            />
           </mesh>
         )}
         {shape === 'hexagon' && (
           <mesh position={[0, h / 2, 0]} castShadow>
             <cylinderGeometry args={[radius, radius, h, 6]} />
-            <meshStandardMaterial color={bodyColor} metalness={bodyMetal} roughness={bodyRough} />
+            <meshPhysicalMaterial
+              color={bodyColor}
+              metalness={bodyMetal}
+              roughness={bodyRough}
+              clearcoat={office.tier >= 4 ? 0.4 : 0}
+              clearcoatRoughness={0.3}
+              envMapIntensity={office.tier >= 4 ? 1.2 : 0.4}
+            />
           </mesh>
         )}
         {shape === 'lshape' && (
@@ -386,19 +579,328 @@ export default function Building({ office, position, onClick, index, day }: Buil
             {/* Main block */}
             <mesh position={[0, h / 2, 0]} castShadow>
               <boxGeometry args={[w, h, d]} />
-              <meshStandardMaterial color={bodyColor} metalness={bodyMetal} roughness={bodyRough} />
+              <meshPhysicalMaterial
+              color={bodyColor}
+              metalness={bodyMetal}
+              roughness={bodyRough}
+              clearcoat={office.tier >= 4 ? 0.4 : 0}
+              clearcoatRoughness={0.3}
+              envMapIntensity={office.tier >= 4 ? 1.2 : 0.4}
+            />
             </mesh>
             {/* Wing extending to the right-back */}
             <mesh position={[w * 0.45, h / 2, -(d * 0.28)]} castShadow>
               <boxGeometry args={[w * 0.45, h, d * 0.45]} />
-              <meshStandardMaterial color={bodyColor} metalness={bodyMetal} roughness={bodyRough} />
+              <meshPhysicalMaterial
+              color={bodyColor}
+              metalness={bodyMetal}
+              roughness={bodyRough}
+              clearcoat={office.tier >= 4 ? 0.4 : 0}
+              clearcoatRoughness={0.3}
+              envMapIntensity={office.tier >= 4 ? 1.2 : 0.4}
+            />
             </mesh>
           </>
         )}
         {shape === 'box' && (
           <mesh position={[0, h / 2, 0]} castShadow>
             <boxGeometry args={[w, h, d]} />
-            <meshStandardMaterial color={bodyColor} metalness={bodyMetal} roughness={bodyRough} />
+            <meshPhysicalMaterial
+              color={bodyColor}
+              metalness={bodyMetal}
+              roughness={bodyRough}
+              clearcoat={office.tier >= 4 ? 0.4 : 0}
+              clearcoatRoughness={0.3}
+              envMapIntensity={office.tier >= 4 ? 1.2 : 0.4}
+            />
+          </mesh>
+        )}
+
+        {/* ── FEATURED: modern glass tower with crown ── */}
+        {shape === 'featured' && (
+          <>
+            {/* Main tower — dark glass curtain wall */}
+            <mesh position={[0, h / 2, 0]} castShadow>
+              <boxGeometry args={[w, h, d]} />
+              <meshPhysicalMaterial
+                color="#2a3040"
+                metalness={0.7}
+                roughness={0.08}
+                clearcoat={0.8}
+                clearcoatRoughness={0.15}
+                envMapIntensity={2.0}
+              />
+            </mesh>
+
+            {/* Setback upper section — tapered crown */}
+            <mesh position={[0, h + 0.8, 0]} castShadow>
+              <boxGeometry args={[w * 0.7, 1.6, d * 0.7]} />
+              <meshPhysicalMaterial
+                color="#1e2530"
+                metalness={0.8}
+                roughness={0.05}
+                clearcoat={1.0}
+                clearcoatRoughness={0.1}
+                envMapIntensity={2.5}
+              />
+            </mesh>
+
+            {/* Steel blue accent bands — G10 brand color */}
+            {[0.15, 0.35, 0.55, 0.75, 0.95].map((frac, bi) => (
+              <group key={`band-${bi}`}>
+                <mesh position={[0, h * frac, d / 2 + 0.003]}>
+                  <planeGeometry args={[w, 0.06]} />
+                  <meshStandardMaterial color="#7BA7C9" emissive="#7BA7C9" emissiveIntensity={isDay ? 0.3 : 1.2} />
+                </mesh>
+                <mesh position={[0, h * frac, -d / 2 - 0.003]} rotation={[0, Math.PI, 0]}>
+                  <planeGeometry args={[w, 0.06]} />
+                  <meshStandardMaterial color="#7BA7C9" emissive="#7BA7C9" emissiveIntensity={isDay ? 0.3 : 1.2} />
+                </mesh>
+                <mesh position={[w / 2 + 0.003, h * frac, 0]} rotation={[0, Math.PI / 2, 0]}>
+                  <planeGeometry args={[d, 0.06]} />
+                  <meshStandardMaterial color="#7BA7C9" emissive="#7BA7C9" emissiveIntensity={isDay ? 0.3 : 1.2} />
+                </mesh>
+                <mesh position={[-w / 2 - 0.003, h * frac, 0]} rotation={[0, -Math.PI / 2, 0]}>
+                  <planeGeometry args={[d, 0.06]} />
+                  <meshStandardMaterial color="#7BA7C9" emissive="#7BA7C9" emissiveIntensity={isDay ? 0.3 : 1.2} />
+                </mesh>
+              </group>
+            ))}
+
+            {/* ─── Heliport platform ─── */}
+            {(() => {
+              const hpY = h + 1.6;       // helipad base Y
+              const hpS = w * 0.7;       // helipad size (square)
+              const hpH = 0.06;          // platform thickness
+              const hpTop = hpY + hpH / 2;
+              const railH = 0.12;
+              const lightSize = 0.018;
+              const lightsPerSide = 6;
+              return (
+                <group>
+                  {/* Thick concrete platform */}
+                  <mesh position={[0, hpY, 0]} castShadow>
+                    <boxGeometry args={[hpS, hpH, hpS]} />
+                    <meshStandardMaterial color="#b0a999" roughness={0.85} metalness={0.05} />
+                  </mesh>
+
+                  {/* White border stripe on surface */}
+                  <mesh position={[0, hpTop + 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                    <ringGeometry args={[hpS * 0.46, hpS * 0.49, 4]} />
+                    <meshStandardMaterial color="#ffffff" />
+                  </mesh>
+
+                  {/* Orange/yellow circle */}
+                  <mesh position={[0, hpTop + 0.003, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                    <ringGeometry args={[hpS * 0.28, hpS * 0.32, 48]} />
+                    <meshStandardMaterial color="#e8a012" emissive="#e8a012" emissiveIntensity={isDay ? 0.2 : 1.0} />
+                  </mesh>
+
+                  {/* H marking — left vertical */}
+                  <mesh position={[-hpS * 0.07, hpTop + 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                    <planeGeometry args={[hpS * 0.045, hpS * 0.22]} />
+                    <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={isDay ? 0.1 : 0.6} />
+                  </mesh>
+                  {/* H marking — right vertical */}
+                  <mesh position={[hpS * 0.07, hpTop + 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                    <planeGeometry args={[hpS * 0.045, hpS * 0.22]} />
+                    <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={isDay ? 0.1 : 0.6} />
+                  </mesh>
+                  {/* H marking — horizontal bar */}
+                  <mesh position={[0, hpTop + 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                    <planeGeometry args={[hpS * 0.18, hpS * 0.045]} />
+                    <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={isDay ? 0.1 : 0.6} />
+                  </mesh>
+
+                  {/* Dark edge trim (steel frame) on all 4 sides */}
+                  {[
+                    [0, hpY, hpS / 2, hpS, hpH, 0.015, 0],            // front
+                    [0, hpY, -hpS / 2, hpS, hpH, 0.015, 0],           // back
+                    [hpS / 2, hpY, 0, 0.015, hpH, hpS, 0],            // right
+                    [-hpS / 2, hpY, 0, 0.015, hpH, hpS, 0],           // left
+                  ].map(([x, y, z, sx, sy, sz], i) => (
+                    <mesh key={`edge-${i}`} position={[x as number, y as number, z as number]}>
+                      <boxGeometry args={[sx as number, sy as number, sz as number]} />
+                      <meshStandardMaterial color="#2a2a2a" metalness={0.7} roughness={0.3} />
+                    </mesh>
+                  ))}
+
+                  {/* Railing posts around perimeter */}
+                  {Array.from({ length: lightsPerSide }).flatMap((_, i) => {
+                    const t = (i + 0.5) / lightsPerSide - 0.5;
+                    const offset = t * hpS;
+                    return [
+                      [offset, hpTop + railH / 2, hpS / 2 + 0.01],
+                      [offset, hpTop + railH / 2, -hpS / 2 - 0.01],
+                      [hpS / 2 + 0.01, hpTop + railH / 2, offset],
+                      [-hpS / 2 - 0.01, hpTop + railH / 2, offset],
+                    ];
+                  }).map((pos, i) => (
+                    <mesh key={`rail-${i}`} position={pos as [number, number, number]}>
+                      <cylinderGeometry args={[0.004, 0.004, railH, 4]} />
+                      <meshStandardMaterial color="#3a3a3a" metalness={0.8} roughness={0.2} />
+                    </mesh>
+                  ))}
+
+                  {/* Horizontal rail bars (top rail) */}
+                  {[
+                    [0, hpTop + railH, hpS / 2 + 0.01, hpS, 0],
+                    [0, hpTop + railH, -hpS / 2 - 0.01, hpS, 0],
+                    [hpS / 2 + 0.01, hpTop + railH, 0, 0, hpS],
+                    [-hpS / 2 - 0.01, hpTop + railH, 0, 0, hpS],
+                  ].map(([x, y, z, sx, sz], i) => (
+                    <mesh key={`hrail-${i}`} position={[x as number, y as number, z as number]}>
+                      <boxGeometry args={[(sx || 0.005) as number, 0.005, (sz || 0.005) as number]} />
+                      <meshStandardMaterial color="#3a3a3a" metalness={0.8} roughness={0.2} />
+                    </mesh>
+                  ))}
+
+                  {/* Yellow perimeter beacon lights */}
+                  {Array.from({ length: lightsPerSide }).flatMap((_, i) => {
+                    const t = (i + 0.5) / lightsPerSide - 0.5;
+                    const offset = t * hpS;
+                    return [
+                      [offset, hpTop + 0.012, hpS / 2 - 0.02],
+                      [offset, hpTop + 0.012, -hpS / 2 + 0.02],
+                      [hpS / 2 - 0.02, hpTop + 0.012, offset],
+                      [-hpS / 2 + 0.02, hpTop + 0.012, offset],
+                    ];
+                  }).map((pos, i) => (
+                    <mesh key={`light-${i}`} position={pos as [number, number, number]}>
+                      <boxGeometry args={[lightSize, lightSize * 0.5, lightSize]} />
+                      <meshStandardMaterial
+                        color="#f5c518"
+                        emissive="#f5c518"
+                        emissiveIntensity={isDay ? 0.3 : 2.5}
+                      />
+                    </mesh>
+                  ))}
+
+                  {/* Windsock pole */}
+                  <mesh position={[hpS * 0.38, hpTop + 0.1, hpS * 0.38]}>
+                    <cylinderGeometry args={[0.005, 0.005, 0.2, 6]} />
+                    <meshStandardMaterial color="#888" metalness={0.7} roughness={0.3} />
+                  </mesh>
+                  {/* Windsock cone — red/white stripes */}
+                  {[0, 1, 2].map((si) => (
+                    <mesh key={`ws-${si}`} position={[hpS * 0.38 + 0.02 + si * 0.015, hpTop + 0.19, hpS * 0.38]}>
+                      <cylinderGeometry args={[0.008 - si * 0.002, 0.01 - si * 0.002, 0.015, 6]} />
+                      <meshStandardMaterial
+                        color={si % 2 === 0 ? '#e03030' : '#ffffff'}
+                        emissive={si % 2 === 0 ? '#e03030' : '#ffffff'}
+                        emissiveIntensity={isDay ? 0 : 0.3}
+                      />
+                    </mesh>
+                  ))}
+                </group>
+              );
+            })()}
+
+            {/* Helicopter on the helipad */}
+            <MiniHelicopter position={[0.05, h + 1.72, 0.05]} isDay={isDay} onClick={onHelicopterClick} />
+
+
+            {/* Base podium — wider concrete foundation */}
+            <mesh position={[0, 0.15, 0]} castShadow>
+              <boxGeometry args={[w * 1.3, 0.3, d * 1.3]} />
+              <meshPhysicalMaterial color="#3a3a3a" roughness={0.7} metalness={0.1} />
+            </mesh>
+
+            {/* Ground glow — blue brand accent */}
+            <mesh position={[0, 0.007, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[w * 2.0, d * 2.0]} />
+              <meshStandardMaterial
+                color="#7BA7C9"
+                emissive="#7BA7C9"
+                emissiveIntensity={isDay ? 0.1 : 0.6}
+                transparent
+                opacity={isDay ? 0.15 : 0.35}
+              />
+            </mesh>
+          </>
+        )}
+
+        {/* ── Rooftop details — subtle decorations on non-featured buildings ── */}
+        {shape !== 'featured' && (() => {
+          const rr = seededRandom(index * 431 + 19);
+          const roofType = rr(); // 0-1 determines decoration type
+          const hasParapet = rr() > 0.5;
+          const roofColor = '#6a6560';
+
+          return (
+            <>
+              {/* Parapet edge — subtle raised rim on some buildings */}
+              {hasParapet && (
+                <>
+                  {(shape === 'box' || shape === 'lshape') && (
+                    <>
+                      <mesh position={[0, h + 0.02, d / 2]} castShadow>
+                        <boxGeometry args={[w + 0.02, 0.04, 0.025]} />
+                        <meshStandardMaterial color={roofColor} roughness={0.9} />
+                      </mesh>
+                      <mesh position={[0, h + 0.02, -d / 2]} castShadow>
+                        <boxGeometry args={[w + 0.02, 0.04, 0.025]} />
+                        <meshStandardMaterial color={roofColor} roughness={0.9} />
+                      </mesh>
+                      <mesh position={[w / 2, h + 0.02, 0]} castShadow>
+                        <boxGeometry args={[0.025, 0.04, d]} />
+                        <meshStandardMaterial color={roofColor} roughness={0.9} />
+                      </mesh>
+                      <mesh position={[-w / 2, h + 0.02, 0]} castShadow>
+                        <boxGeometry args={[0.025, 0.04, d]} />
+                        <meshStandardMaterial color={roofColor} roughness={0.9} />
+                      </mesh>
+                    </>
+                  )}
+                </>
+              )}
+
+              {/* AC units — small boxes on roof for tier 2+ */}
+              {office.tier >= 2 && roofType < 0.6 && (
+                <>
+                  <mesh position={[w * 0.25, h + 0.04, -d * 0.25]} castShadow>
+                    <boxGeometry args={[0.1, 0.08, 0.08]} />
+                    <meshStandardMaterial color="#888" metalness={0.5} roughness={0.4} />
+                  </mesh>
+                  {office.tier >= 3 && (
+                    <mesh position={[-w * 0.2, h + 0.04, d * 0.2]} castShadow>
+                      <boxGeometry args={[0.08, 0.07, 0.08]} />
+                      <meshStandardMaterial color="#7a7a7a" metalness={0.5} roughness={0.4} />
+                    </mesh>
+                  )}
+                </>
+              )}
+
+              {/* Water tank — cylinder on roof for tier 1-3 */}
+              {office.tier <= 3 && roofType >= 0.6 && roofType < 0.85 && (
+                <mesh position={[-w * 0.25, h + 0.1, d * 0.2]} castShadow>
+                  <cylinderGeometry args={[0.05, 0.05, 0.2, 8]} />
+                  <meshStandardMaterial color="#5a6a6a" roughness={0.7} metalness={0.2} />
+                </mesh>
+              )}
+
+              {/* Rooftop garden patch — green accent for tier 4+ */}
+              {office.tier >= 4 && roofType >= 0.35 && (
+                <mesh position={[0, h + 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                  <planeGeometry args={[w * 0.5, d * 0.5]} />
+                  <meshStandardMaterial
+                    color={isDay ? '#4a6a3a' : '#2a3a25'}
+                    roughness={0.95}
+                  />
+                </mesh>
+              )}
+            </>
+          );
+        })()}
+
+        {/* Concrete base plinth (skip for featured — has its own podium) */}
+        {shape !== 'featured' && (
+          <mesh position={[0, 0.08, 0]} castShadow>
+            {(shape === 'cylinder' || shape === 'hexagon')
+              ? <cylinderGeometry args={[radius + 0.03, radius + 0.04, 0.16, shape === 'hexagon' ? 6 : 24]} />
+              : <boxGeometry args={[w + 0.06, 0.16, d + 0.06]} />
+            }
+            <meshPhysicalMaterial color="#7a7570" roughness={0.92} metalness={0.0} envMapIntensity={0.2} />
           </mesh>
         )}
 
@@ -484,7 +986,7 @@ export default function Building({ office, position, onClick, index, day }: Buil
 
         {/* Plus name sign (letreiro) */}
         {office.is_plus && (
-          <Html position={[0, h + 0.15, 0]} center>
+          <Html position={[0, h + 0.15, 0]} center zIndexRange={[1, 0]}>
             <div className="bg-gradient-to-r from-amber-600 to-yellow-500 text-white text-[9px] px-2 py-0.5 rounded-sm font-bold whitespace-nowrap shadow-lg pointer-events-none">
               {office.name}
             </div>
@@ -494,7 +996,7 @@ export default function Building({ office, position, onClick, index, day }: Buil
         {showTooltip && (() => {
           const tierLabels: Record<number, string> = { 1: 'Iniciante', 2: 'Starter', 3: 'Pro', 4: 'Business', 5: 'Enterprise' };
           return (
-            <Html position={[0, tooltipY, 0]} center>
+            <Html position={[0, tooltipY, 0]} center zIndexRange={[1, 0]}>
               <div className="bg-black/90 border border-[#333] px-3 py-2.5 whitespace-nowrap pointer-events-none rounded-sm backdrop-blur-sm min-w-[180px]">
                 {/* Row 1: rank + name + PLUS badge */}
                 <p className="text-white text-sm font-semibold">
