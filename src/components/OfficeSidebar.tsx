@@ -11,6 +11,7 @@ const LocationMap = dynamic(() => import('./LocationMap'), { ssr: false });
 interface OfficeSidebarProps {
   office: RankedOffice | null;
   onClose: () => void;
+  allOffices?: RankedOffice[];
 }
 
 const tierLabels: Record<number, string> = {
@@ -21,7 +22,7 @@ const tierLabels: Record<number, string> = {
   5: 'Enterprise',
 };
 
-export default function OfficeSidebar({ office, onClose }: OfficeSidebarProps) {
+export default function OfficeSidebar({ office, onClose, allOffices = [] }: OfficeSidebarProps) {
   if (!office) return null;
 
   return (
@@ -30,7 +31,7 @@ export default function OfficeSidebar({ office, onClose }: OfficeSidebarProps) {
     <div className="fixed inset-0 z-50 bg-black/60 md:bg-black/30" onClick={onClose}>
     {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
     <div
-      className="absolute right-0 top-0 h-full w-full max-w-[400px] bg-[#0c0c0c] border-l border-[#1e1e1e] overflow-y-auto"
+      className="absolute right-0 top-0 h-full w-full max-w-[520px] bg-[#0c0c0c] border-l border-[#1e1e1e] overflow-y-auto"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="p-6 sm:p-8 pb-10">
@@ -48,6 +49,21 @@ export default function OfficeSidebar({ office, onClose }: OfficeSidebarProps) {
 
         {/* ── Header ── */}
         <div className="pr-10">
+          {/* Logo */}
+          {office.logo_url && (
+            <div className="mb-5 w-full flex items-center justify-center">
+              <div className="w-full h-20 relative bg-[#111] rounded-lg border border-[#1e1e1e] flex items-center justify-center overflow-hidden">
+                <Image
+                  src={office.logo_url}
+                  alt={`Logo ${office.name}`}
+                  width={180}
+                  height={60}
+                  className="object-contain max-h-14"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Rank inline with name */}
           <div className="flex items-start gap-3">
             {office.rank != null && (
@@ -96,6 +112,31 @@ export default function OfficeSidebar({ office, onClose }: OfficeSidebarProps) {
             </span>
           )}
         </div>
+
+        {/* ── Competitor Proximity ── */}
+        {(() => {
+          const sameCityVerified = allOffices.filter(
+            (o) => o.id !== office.id && o.city === office.city && o.verified
+          ).length;
+          if (sameCityVerified === 0) return null;
+          return (
+            <div className="mt-5 flex items-center gap-2.5 px-3.5 py-2.5 bg-[#131313] border border-[#1e1e1e] rounded-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#666] flex-shrink-0">
+                <path d="M3 21h18" />
+                <path d="M5 21V7l8-4v18" />
+                <path d="M19 21V11l-6-4" />
+                <path d="M9 9h1" />
+                <path d="M9 13h1" />
+                <path d="M9 17h1" />
+              </svg>
+              <p className="text-[#888] text-[11px] leading-snug">
+                <span className="text-[#bbb] font-medium">{sameCityVerified}</span>{' '}
+                {sameCityVerified === 1 ? 'escritório' : 'escritórios'} da sua cidade{' '}
+                {sameCityVerified === 1 ? 'já é verificado' : 'já são verificados'}
+              </p>
+            </div>
+          );
+        })()}
 
         {/* ── Revenue card ── */}
         {office.verified && office.revenue_range != null && (
@@ -231,6 +272,23 @@ export default function OfficeSidebar({ office, onClose }: OfficeSidebarProps) {
             </div>
           </div>
         )}
+
+        {/* ── Ranking Teaser (unverified) ── */}
+        {!office.verified && allOffices.length > 0 && (() => {
+          const estimatedPosition = allOffices.filter(
+            (o) => o.verified && o.tier > office.tier
+          ).length + 1;
+          return (
+            <div className="mt-4 px-4 py-3 bg-[#111] border border-[#1a1a1a] rounded-lg">
+              <p className="text-[#ccc] text-xs font-medium">
+                Se verificado, estaria na posição <span className="text-white font-semibold">#{estimatedPosition}</span>
+              </p>
+              <p className="text-[#666] text-[10px] mt-1.5 leading-relaxed">
+                Verifique seu faturamento via Asaas para aparecer no ranking
+              </p>
+            </div>
+          );
+        })()}
 
         {/* ── Actions ── */}
         <div className="mt-8 space-y-3">

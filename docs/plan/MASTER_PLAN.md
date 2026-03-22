@@ -35,21 +35,24 @@ The a-ha moment = "I see MY building in the city."
 
 Create desire to upgrade at every interaction point.
 
-- [ ] **2.1 Building comparison on hover**
+- [x] **2.1 Building comparison on hover** ✅
   - Hovering a verified (white/tall) building shows: "Tier 4 · Verificado · #3 no ranking"
   - Hovering your own (gray/small): "Tier 1 · Não verificado · Verifique para subir"
-- [ ] **2.2 "Ghost building" for unregistered visitors**
+  - Enhanced tooltip with tier progress bar (5 segments) and tier label
+- [x] **2.2 "Ghost building" for unregistered visitors** ✅
   - Show a translucent placeholder: "Seu escritório poderia estar aqui"
   - Click → registration flow
-- [ ] **2.3 Ranking position teaser**
+  - Fixed bottom-right CTA with building silhouette icon
+- [x] **2.3 Ranking position teaser** ✅
   - Sidebar shows: "Se verificado, seu escritório estaria na posição #X"
-  - Based on estimated revenue bracket
-- [ ] **2.4 Competitor proximity trigger**
-  - When viewing a building in the same city: "3 escritórios da sua cidade já são verificados"
+  - Based on estimated tier position among verified offices
+- [x] **2.4 Competitor proximity trigger** ✅
+  - When viewing a building in the same city: "X escritórios da sua cidade já são verificados"
   - Creates urgency through local competition
-- [ ] **2.5 Upgrade CTA in office detail page**
+- [x] **2.5 Upgrade CTA in office detail page** ✅
   - Side-by-side visual: current tier vs. next tier building
-  - "Seu prédio com Tier 3" → show taller, whiter building preview
+  - CSS div buildings showing "Seu prédio atual" vs "Com verificação Asaas"
+  - Office detail page migrated from mock data to Supabase
 - [ ] **2.6 Weekly ranking email digest**
   - "Seu escritório caiu 2 posições esta semana" / "3 novos escritórios na sua cidade"
   - CTA: "Verifique para proteger sua posição"
@@ -180,10 +183,11 @@ Organic acquisition loops.
 - [x] Street lamps, stars, bloom post-processing
 
 ### In Progress
-- [ ] Real Supabase integration on detail page (still uses mock data)
+- [ ] Phase 3: Lovable Core Features
 
-### Not Started
-- [ ] Phases 2-5
+### Completed
+- [x] Real Supabase integration on detail page
+- [x] Phase 2: Want Triggers (2.1–2.5)
 
 ---
 
@@ -210,5 +214,5 @@ Organic acquisition loops.
 
 ---
 
-*Last updated: 2026-03-21 (Phase 1 completed)*
+*Last updated: 2026-03-22 (Phase 2.1–2.5 completed)*
 *Next review: Weekly or after each phase milestone*

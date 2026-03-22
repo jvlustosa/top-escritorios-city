@@ -279,7 +279,6 @@ function StreetLamps({ day }: { day: number }) {
   const poleRef = useRef<THREE.InstancedMesh>(null);
   const headRef = useRef<THREE.InstancedMesh>(null);
   const armRef = useRef<THREE.InstancedMesh>(null);
-  const glowRef = useRef<THREE.InstancedMesh>(null);
 
   const LAMP_HEIGHT = 1.2;
   const ARM_LENGTH = 0.35;
@@ -296,24 +295,22 @@ function StreetLamps({ day }: { day: number }) {
       const halfW = (main ? ROAD_MAIN_WIDTH : ROAD_SECONDARY_WIDTH) / 2;
       const sidewalkCenter = halfW + SIDEWALK_WIDTH / 2;
 
-      // Along horizontal roads — stagger: odd j on +z side, even j on -z side
+      // Along horizontal roads — lamp at every unit, staggered sides
       for (let j = -gridSize; j <= gridSize; j++) {
         if (j % 4 === 0) continue; // skip intersections
-        if (j % 2 !== 0) continue; // every other unit for spacing
         const x = j * spacing;
-        const side = (j % 4 === 2) ? 1 : -1; // stagger sides
+        const side = (j % 2 === 0) ? 1 : -1; // stagger sides
         result.push({
           pos: [x, 0, i * spacing + sidewalkCenter * side],
           armDir: [0, 0, -side],
         });
       }
 
-      // Along vertical roads — stagger similarly
+      // Along vertical roads — lamp at every unit, staggered sides
       for (let j = -gridSize; j <= gridSize; j++) {
         if (j % 4 === 0) continue;
-        if (j % 2 !== 0) continue;
         const z = j * spacing;
-        const side = (j % 4 === 2) ? 1 : -1;
+        const side = (j % 2 === 0) ? 1 : -1;
         result.push({
           pos: [i * spacing + sidewalkCenter * side, 0, z],
           armDir: [-side, 0, 0],
@@ -326,7 +323,7 @@ function StreetLamps({ day }: { day: number }) {
   const isNight = day < 0.3;
 
   useEffect(() => {
-    if (!poleRef.current || !headRef.current || !armRef.current || !glowRef.current) return;
+    if (!poleRef.current || !headRef.current || !armRef.current) return;
     const dummy = new THREE.Object3D();
     lamps.forEach((lamp, i) => {
       const [x, , z] = lamp.pos;
@@ -356,16 +353,10 @@ function StreetLamps({ day }: { day: number }) {
       dummy.updateMatrix();
       headRef.current!.setMatrixAt(i, dummy.matrix);
 
-      // Ground light pool — centered under head
-      dummy.position.set(headX, 0.008, headZ);
-      dummy.rotation.set(-Math.PI / 2, 0, 0);
-      dummy.updateMatrix();
-      glowRef.current!.setMatrixAt(i, dummy.matrix);
     });
     poleRef.current.instanceMatrix.needsUpdate = true;
     headRef.current.instanceMatrix.needsUpdate = true;
     armRef.current.instanceMatrix.needsUpdate = true;
-    glowRef.current.instanceMatrix.needsUpdate = true;
   }, [lamps]);
 
   return (
@@ -389,36 +380,6 @@ function StreetLamps({ day }: { day: number }) {
           emissiveIntensity={isNight ? 3.0 : 0}
         />
       </instancedMesh>
-      {/* Ground light pool — warm cone under each lamp */}
-      <instancedMesh ref={glowRef} args={[undefined, undefined, lamps.length]} frustumCulled>
-        <circleGeometry args={[1.2, 20]} />
-        <meshStandardMaterial
-          color="#ffe0a0"
-          emissive="#ffe0a0"
-          emissiveIntensity={isNight ? 1.5 : 0}
-          transparent
-          opacity={isNight ? 0.6 : 0}
-          depthWrite={false}
-        />
-      </instancedMesh>
-      {/* Real point lights — only near center for performance (within 20 units) */}
-      {isNight && lamps
-        .filter((lamp) => Math.abs(lamp.pos[0]) < 20 && Math.abs(lamp.pos[2]) < 20)
-        .filter((_, i) => i % 2 === 0)
-        .map((lamp, i) => {
-          const headX = lamp.pos[0] + lamp.armDir[0] * ARM_LENGTH;
-          const headZ = lamp.pos[2] + lamp.armDir[2] * ARM_LENGTH;
-          return (
-            <pointLight
-              key={`lamp-light-${i}`}
-              position={[headX, LAMP_HEIGHT - 0.05, headZ]}
-              color="#ffe0a0"
-              intensity={1.5}
-              distance={5}
-              decay={1.5}
-            />
-          );
-        })}
     </>
   );
 }
@@ -938,6 +899,9 @@ export default function CityScene({ offices, onSelectOffice, timeOverride }: Cit
       />
       <directionalLight position={[-5, 8, -8]} intensity={tod.sunIntensity * 0.25} color={tod.sunColor} />
       <hemisphereLight args={[tod.skyColor, tod.groundColor, 0.3]} />
+      {tod.day < 0.3 && (
+        <directionalLight position={[-15, 25, 10]} intensity={0.4} color="#b0c4e8" />
+      )}
       {tod.day > 0.3 && <Environment preset="city" environmentIntensity={0.4} />}
 
       <CityGrid offices={offices} onSelectOffice={onSelectOffice} timeOverride={timeOverride} />

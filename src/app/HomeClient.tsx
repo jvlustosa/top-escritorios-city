@@ -15,11 +15,12 @@ function CityLoadingScreen() {
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 90) return prev + 0.2;
-        if (prev >= 60) return prev + 1;
-        return prev + 3;
+        if (prev >= 100) { clearInterval(interval); return 100; }
+        if (prev >= 92) return prev + 4;
+        if (prev >= 60) return prev + 2;
+        return prev + 4;
       });
-    }, 80);
+    }, 60);
     return () => clearInterval(interval);
   }, []);
 
@@ -182,7 +183,33 @@ export default function HomeClient() {
         </div>
       )}
 
-      <OfficeSidebar office={selectedOffice} onClose={() => setSelectedOffice(null)} />
+      <OfficeSidebar office={selectedOffice} onClose={() => setSelectedOffice(null)} allOffices={offices} />
+
+      {/* Ghost Building CTA */}
+      <a
+        href="/register"
+        className="fixed bottom-[70px] right-5 z-20 flex items-center gap-3 px-4 py-3 bg-black/70 border border-white/[0.08] backdrop-blur-sm rounded-lg hover:bg-black/80 hover:border-white/[0.15] transition-all group"
+      >
+        {/* Building silhouette icon */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="28"
+          viewBox="0 0 24 28"
+          fill="none"
+          className="opacity-30 group-hover:opacity-50 transition-opacity"
+        >
+          <rect x="4" y="6" width="16" height="22" rx="1" fill="white" fillOpacity="0.15" stroke="white" strokeOpacity="0.2" strokeWidth="1" strokeDasharray="3 2" />
+          <rect x="7" y="10" width="3" height="3" rx="0.5" fill="white" fillOpacity="0.1" />
+          <rect x="14" y="10" width="3" height="3" rx="0.5" fill="white" fillOpacity="0.1" />
+          <rect x="7" y="16" width="3" height="3" rx="0.5" fill="white" fillOpacity="0.1" />
+          <rect x="14" y="16" width="3" height="3" rx="0.5" fill="white" fillOpacity="0.1" />
+          <rect x="10" y="22" width="4" height="6" rx="0.5" fill="white" fillOpacity="0.1" />
+        </svg>
+        <span className="text-[#666] text-xs group-hover:text-[#999] transition-colors leading-snug">
+          Seu escritório<br />poderia estar aqui
+        </span>
+      </a>
 
       <SocialProofCounter
         total={offices.length}

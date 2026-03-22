@@ -4,9 +4,11 @@ import { useState, useEffect, useCallback } from 'react';
 
 const TOUR_KEY = 'tour_completed';
 
-interface Step {
+type StepType = 'tooltip' | 'form';
+
+interface TooltipStep {
+  type: 'tooltip';
   message: string;
-  /** Tailwind/inline position classes for the tooltip box */
   position: {
     top?: string;
     bottom?: string;
@@ -14,12 +16,25 @@ interface Step {
     right?: string;
     transform?: string;
   };
-  /** Which side the arrow points toward */
   arrowDirection: 'up' | 'down' | 'left' | 'right';
 }
 
+interface FormStep {
+  type: 'form';
+  title: string;
+  subtitle: string;
+}
+
+type Step = TooltipStep | FormStep;
+
 const steps: Step[] = [
   {
+    type: 'form',
+    title: 'Crie sua conta',
+    subtitle: 'Cadastre seu escritório e apareça no ranking da cidade',
+  },
+  {
+    type: 'tooltip',
     message: 'Esta é a cidade dos escritórios de advocacia',
     position: {
       top: '50%',
@@ -29,6 +44,7 @@ const steps: Step[] = [
     arrowDirection: 'down',
   },
   {
+    type: 'tooltip',
     message: 'Cada prédio representa um escritório real',
     position: {
       top: '55%',
@@ -38,6 +54,7 @@ const steps: Step[] = [
     arrowDirection: 'up',
   },
   {
+    type: 'tooltip',
     message: 'Registre o seu e apareça no ranking',
     position: {
       top: '80px',
@@ -47,24 +64,22 @@ const steps: Step[] = [
   },
 ];
 
-function Arrow({ direction }: { direction: Step['arrowDirection'] }) {
-  const base = 'absolute border-[6px] border-transparent';
+function Arrow({ direction }: { direction: TooltipStep['arrowDirection'] }) {
+  const base = 'absolute border-[8px] border-transparent';
 
   if (direction === 'up') {
-    // Arrow points up — triangle hangs above the box
     return (
       <span
-        className={`${base} -top-[12px] left-1/2 -translate-x-1/2`}
+        className={`${base} -top-[16px] left-1/2 -translate-x-1/2`}
         style={{ borderBottomColor: '#ffffff' }}
       />
     );
   }
 
   if (direction === 'down') {
-    // Arrow points down — triangle hangs below the box
     return (
       <span
-        className={`${base} -bottom-[12px] left-1/2 -translate-x-1/2`}
+        className={`${base} -bottom-[16px] left-1/2 -translate-x-1/2`}
         style={{ borderTopColor: '#ffffff' }}
       />
     );
@@ -73,16 +88,15 @@ function Arrow({ direction }: { direction: Step['arrowDirection'] }) {
   if (direction === 'left') {
     return (
       <span
-        className={`${base} -left-[12px] top-1/2 -translate-y-1/2`}
+        className={`${base} -left-[16px] top-1/2 -translate-y-1/2`}
         style={{ borderRightColor: '#ffffff' }}
       />
     );
   }
 
-  // right
   return (
     <span
-      className={`${base} -right-[12px] top-1/2 -translate-y-1/2`}
+      className={`${base} -right-[16px] top-1/2 -translate-y-1/2`}
       style={{ borderLeftColor: '#ffffff' }}
     />
   );
@@ -91,6 +105,12 @@ function Arrow({ direction }: { direction: Step['arrowDirection'] }) {
 export default function GuidedTour() {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+  });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     try {
@@ -110,17 +130,38 @@ export default function GuidedTour() {
     setVisible(false);
   }, []);
 
+  const validateForm = useCallback(() => {
+    const errors: Record<string, string> = {};
+    if (!formData.name.trim()) errors.name = 'Nome é obrigatório';
+    if (!formData.email.trim()) {
+      errors.email = 'E-mail é obrigatório';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'E-mail inválido';
+    }
+    if (!formData.password) {
+      errors.password = 'Senha é obrigatória';
+    } else if (formData.password.length < 6) {
+      errors.password = 'Mínimo de 6 caracteres';
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, [formData]);
+
   const handleNext = useCallback(() => {
+    const current = steps[step];
+    if (current.type === 'form') {
+      if (!validateForm()) return;
+      // TODO: submit registration to backend
+    }
     if (step < steps.length - 1) {
       setStep((s) => s + 1);
     } else {
       completeTour();
     }
-  }, [step, completeTour]);
+  }, [step, completeTour, validateForm]);
 
   const handleOverlayClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      // Only dismiss when clicking directly on the overlay, not on the tooltip
       if (e.target === e.currentTarget) {
         completeTour();
       }
@@ -142,18 +183,147 @@ export default function GuidedTour() {
   const current = steps[step];
   const isLast = step === steps.length - 1;
 
+  if (current.type === 'form') {
+    return (
+      <div
+        className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center"
+        onClick={handleOverlayClick}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Cadastro"
+      >
+        <div
+          className="w-[460px] max-w-[92vw] bg-white rounded-2xl shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="px-8 pt-8 pb-2">
+            {/* Step counter */}
+            <p className="text-sm uppercase tracking-widest text-[#999] mb-2 select-none font-medium">
+              {step + 1} de {steps.length}
+            </p>
+
+            {/* Title */}
+            <h2 className="text-3xl font-bold text-black mb-1">
+              {current.title}
+            </h2>
+            <p className="text-lg text-[#666] mb-8">
+              {current.subtitle}
+            </p>
+
+            {/* Form fields */}
+            <div className="space-y-5">
+              <div>
+                <label htmlFor="tour-name" className="block text-base font-semibold text-black mb-1.5">
+                  Nome completo
+                </label>
+                <input
+                  id="tour-name"
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => {
+                    setFormData((d) => ({ ...d, name: e.target.value }));
+                    setFormErrors((errs) => { const { name, ...rest } = errs; return rest; });
+                  }}
+                  placeholder="João da Silva"
+                  className={`w-full px-4 py-3 text-lg rounded-xl border-2 bg-[#f9f9f9] text-black placeholder:text-[#bbb] outline-none transition-colors ${
+                    formErrors.name ? 'border-red-400 focus:border-red-500' : 'border-[#e0e0e0] focus:border-black'
+                  }`}
+                />
+                {formErrors.name && (
+                  <p className="text-sm text-red-500 mt-1">{formErrors.name}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="tour-email" className="block text-base font-semibold text-black mb-1.5">
+                  E-mail
+                </label>
+                <input
+                  id="tour-email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => {
+                    setFormData((d) => ({ ...d, email: e.target.value }));
+                    setFormErrors((errs) => { const { email, ...rest } = errs; return rest; });
+                  }}
+                  placeholder="joao@escritorio.com.br"
+                  className={`w-full px-4 py-3 text-lg rounded-xl border-2 bg-[#f9f9f9] text-black placeholder:text-[#bbb] outline-none transition-colors ${
+                    formErrors.email ? 'border-red-400 focus:border-red-500' : 'border-[#e0e0e0] focus:border-black'
+                  }`}
+                />
+                {formErrors.email && (
+                  <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="tour-password" className="block text-base font-semibold text-black mb-1.5">
+                  Senha
+                </label>
+                <input
+                  id="tour-password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => {
+                    setFormData((d) => ({ ...d, password: e.target.value }));
+                    setFormErrors((errs) => { const { password, ...rest } = errs; return rest; });
+                  }}
+                  placeholder="Mínimo 6 caracteres"
+                  className={`w-full px-4 py-3 text-lg rounded-xl border-2 bg-[#f9f9f9] text-black placeholder:text-[#bbb] outline-none transition-colors ${
+                    formErrors.password ? 'border-red-400 focus:border-red-500' : 'border-[#e0e0e0] focus:border-black'
+                  }`}
+                />
+                {formErrors.password && (
+                  <p className="text-sm text-red-500 mt-1">{formErrors.password}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="px-8 pt-5 pb-4 flex items-center justify-between">
+            <button
+              onClick={completeTour}
+              className="text-[#999] text-base hover:text-black transition-colors underline underline-offset-2"
+            >
+              Pular
+            </button>
+
+            <button
+              onClick={handleNext}
+              className="px-7 py-3 bg-black text-white text-lg font-semibold rounded-xl hover:bg-[#222] transition-colors"
+            >
+              Próximo
+            </button>
+          </div>
+
+          {/* Progress bar */}
+          <div className="flex h-[4px] rounded-b-2xl overflow-hidden">
+            {steps.map((_, i) => (
+              <div
+                key={i}
+                className={`flex-1 transition-colors duration-300 ${
+                  i <= step ? 'bg-black' : 'bg-[#eee]'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Tooltip step
   return (
-    // Overlay — dims the background
     <div
-      className="fixed inset-0 z-[100] bg-black/50"
+      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"
       aria-label="Tour guiado"
     >
-      {/* Tooltip */}
       <div
-        className="absolute w-[280px] bg-white text-black"
+        className="absolute w-[400px] max-w-[92vw] bg-white text-black rounded-2xl shadow-2xl"
         style={{
           top: current.position.top,
           bottom: current.position.bottom,
@@ -163,47 +333,44 @@ export default function GuidedTour() {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Pointing arrow */}
         <Arrow direction={current.arrowDirection} />
 
-        <div className="px-5 py-4">
+        <div className="px-8 py-6">
           {/* Step counter */}
-          <p className="text-[10px] uppercase tracking-widest text-[#888] mb-2 select-none">
-            {step + 1}/{steps.length}
+          <p className="text-sm uppercase tracking-widest text-[#999] mb-3 select-none font-medium">
+            {step + 1} de {steps.length}
           </p>
 
           {/* Message */}
-          <p className="text-sm font-medium leading-snug text-black">
+          <p className="text-xl font-semibold leading-relaxed text-black">
             {current.message}
           </p>
 
           {/* Actions */}
-          <div className="flex items-center justify-between mt-4">
-            {/* Dismiss link */}
+          <div className="flex items-center justify-between mt-6">
             <button
               onClick={completeTour}
-              className="text-[#888] text-xs hover:text-black transition-colors underline underline-offset-2"
+              className="text-[#999] text-base hover:text-black transition-colors underline underline-offset-2"
             >
               Pular
             </button>
 
-            {/* Next / Start */}
             <button
               onClick={handleNext}
-              className="px-4 py-1.5 bg-black text-white text-xs font-medium hover:bg-[#222] transition-colors"
+              className="px-7 py-3 bg-black text-white text-lg font-semibold rounded-xl hover:bg-[#222] transition-colors"
             >
               {isLast ? 'Começar' : 'Próximo'}
             </button>
           </div>
         </div>
 
-        {/* Step progress bar */}
-        <div className="flex h-[2px]">
+        {/* Progress bar */}
+        <div className="flex h-[4px] rounded-b-2xl overflow-hidden">
           {steps.map((_, i) => (
             <div
               key={i}
               className={`flex-1 transition-colors duration-300 ${
-                i <= step ? 'bg-black' : 'bg-[#ddd]'
+                i <= step ? 'bg-black' : 'bg-[#eee]'
               }`}
             />
           ))}
