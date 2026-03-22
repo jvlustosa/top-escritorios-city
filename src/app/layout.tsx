@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'escritorio.ai — A cidade dos escritórios',
+  title: 'top.escritorio.ai — Ranking dos Escritórios Mais Digitais',
   description:
-    'Uma cidade 3D interativa onde cada escritório de advocacia brasileiro é um prédio.',
+    'Ranking interativo 3D dos escritórios de advocacia mais digitais do Brasil, com faturamento verificado via Asaas.',
+  metadataBase: new URL('https://top.escritorio.ai'),
 };
 
 export default function RootLayout({

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude /plugin --help)",
+      "Bash(claude plugin:*)",
+      "Bash(ls -la /home/fontenele/Code/escritorio-city/src/data/mock-offices.ts /home/fontenele/Code/escritorio-city/src/components/OfficeSidebar.tsx /home/fontenele/Code/escritorio-city/src/app/office/[slug]/page.tsx /home/fontenele/Code/escritorio-city/src/app/api/offices/route.ts)",
+      "Bash(npm run:*)",
+      "WebFetch(domain:advogado10x.com.br)",
+      "Bash(sg docker:*)",
+      "Read(//home/fontenele/.claude/**)",
+      "Read(//home/fontenele/.claude/plugins/**)"
+    ]
+  }
+}

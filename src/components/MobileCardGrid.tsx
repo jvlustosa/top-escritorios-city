@@ -1,10 +1,10 @@
 'use client';
 
-import { Office } from '@/data/mock-offices';
+import { RankedOffice } from '@/data/mock-offices';
 
 interface MobileCardGridProps {
-  offices: Office[];
-  onSelectOffice: (office: Office) => void;
+  offices: RankedOffice[];
+  onSelectOffice: (office: RankedOffice) => void;
 }
 
 const tierLabels: Record<number, string> = {
@@ -22,27 +22,55 @@ export default function MobileCardGrid({ offices, onSelectOffice }: MobileCardGr
         <button
           key={office.id}
           onClick={() => onSelectOffice(office)}
-          className="text-left p-4 bg-city-navy/50 border border-city-navy-light rounded-lg hover:bg-city-navy transition-colors"
+          className={`text-left p-4 bg-[#0a0a0a] border rounded-lg active:bg-[#111] transition-colors group ${
+            office.is_plus ? 'border-amber-600/40' : 'border-[#1e1e1e]'
+          }`}
         >
           <div className="flex items-start justify-between">
-            <div>
-              <h3 className="font-heading text-sm font-semibold text-white">
-                {office.name}
-              </h3>
-              <p className="text-gray-500 text-xs font-mono mt-0.5">
-                {office.city}, {office.state}
-              </p>
+            <div className="flex items-center gap-3">
+              {office.rank != null ? (
+                <span className="text-[#3a3a3a] text-2xl font-bold tabular-nums w-8 text-right select-none">
+                  {office.rank}
+                </span>
+              ) : (
+                <span className="text-[#222] text-2xl font-bold w-8 text-right select-none">—</span>
+              )}
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-white truncate">
+                  {office.name}
+                </h3>
+                <p className="text-[#666] text-xs mt-0.5">
+                  {office.city}, {office.state}
+                </p>
+              </div>
             </div>
-            <span className="text-xs font-mono text-gray-500 shrink-0 ml-2">
-              T{office.tier}
-            </span>
+            {/* Chevron — signals tappability */}
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#333] group-active:text-[#666] flex-shrink-0 mt-1 ml-2 transition-colors">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
           </div>
-          <div className="flex gap-1.5 mt-2">
-            {office.verified && (
-              <span className="text-emerald-400 text-xs">✓</span>
+          <div className="flex gap-1.5 mt-2.5 ml-11 flex-wrap">
+            {office.verified ? (
+              <span className="px-2 py-0.5 bg-emerald-950/40 text-emerald-400 text-[10px] rounded-full">
+                Verificado
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 bg-[#1a1a1a] text-[#555] text-[10px] rounded-full">
+                Não verificado
+              </span>
             )}
+            <span className="px-2 py-0.5 bg-[#1a1a1a] text-[#888] text-[10px] rounded-full">
+              {tierLabels[office.tier]}
+            </span>
             {office.chat_juridico_client && (
-              <span className="text-city-gold text-xs">★ Chat Jurídico</span>
+              <span className="px-2 py-0.5 bg-[#1a1a1a] text-[#888] text-[10px] rounded-full">
+                Chat Juridico
+              </span>
+            )}
+            {office.is_plus && (
+              <span className="px-2 py-0.5 bg-amber-950/30 text-amber-500 text-[10px] font-medium rounded-full">
+                Plus
+              </span>
             )}
           </div>
         </button>

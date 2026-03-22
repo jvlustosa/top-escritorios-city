@@ -10,9 +10,9 @@ export default function AdminPage() {
 
   if (!authed) {
     return (
-      <main className="min-h-screen bg-city-bg flex items-center justify-center px-4">
+      <main className="min-h-screen bg-black flex items-center justify-center px-4">
         <div className="max-w-sm w-full">
-          <h1 className="font-heading text-2xl font-bold text-white text-center">
+          <h1 className="text-white text-2xl font-semibold text-center">
             Admin
           </h1>
           <div className="mt-6">
@@ -20,7 +20,7 @@ export default function AdminPage() {
               type="password"
               value={secret}
               onChange={(e) => setSecret(e.target.value)}
-              className="w-full px-4 py-3 bg-city-navy/50 border border-city-navy-light rounded-lg text-white font-mono text-sm focus:outline-none focus:border-city-gold/50"
+              className="w-full px-4 py-3 bg-black border border-[#222] text-white text-sm focus:outline-none focus:border-[#555] placeholder-[#444]"
               placeholder="Admin secret"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') setAuthed(true);
@@ -28,7 +28,7 @@ export default function AdminPage() {
             />
             <button
               onClick={() => setAuthed(true)}
-              className="w-full mt-3 px-4 py-3 bg-city-navy hover:bg-city-navy-light border border-city-navy-light rounded-lg text-white font-mono text-sm transition-colors"
+              className="w-full mt-3 px-4 py-3 bg-white text-black text-sm font-medium hover:bg-[#e0e0e0] transition-colors"
             >
               Entrar
             </button>
@@ -40,77 +40,69 @@ export default function AdminPage() {
 
   function toggleChatJuridico(id: string) {
     setOffices((prev) =>
-      prev.map((f) =>
-        f.id === id ? { ...f, chat_juridico_client: !f.chat_juridico_client } : f
-      )
+      prev.map((o) => (o.id === id ? { ...o, chat_juridico_client: !o.chat_juridico_client } : o))
     );
   }
 
   function toggleVerified(id: string) {
     setOffices((prev) =>
-      prev.map((f) =>
-        f.id === id ? { ...f, verified: !f.verified } : f
-      )
+      prev.map((o) => (o.id === id ? { ...o, verified: !o.verified } : o))
     );
   }
 
   return (
-    <main className="min-h-screen bg-city-bg">
-      <nav className="border-b border-city-navy-light px-6 py-4 flex items-center justify-between">
-        <a href="/" className="font-heading text-lg font-bold text-white">
-          escritorio<span className="text-city-gold">.ai</span>
-          <span className="text-gray-500 text-xs ml-2 font-mono">admin</span>
+    <main className="min-h-screen bg-black">
+      <nav className="border-b border-[#222] px-6 py-4">
+        <a href="/" className="text-white text-lg font-semibold tracking-tight">
+          top<span className="text-[#555]">.escritorio</span><span className="text-[#888]">.ai</span>
+          <span className="text-[#555] text-xs ml-2">admin</span>
         </a>
       </nav>
 
       <div className="max-w-4xl mx-auto px-6 py-8">
-        <h1 className="font-heading text-2xl font-bold text-white">
+        <h1 className="text-white text-2xl font-semibold">
           Gerenciar escritórios
         </h1>
-        <p className="text-gray-500 font-mono text-sm mt-1">
+        <p className="text-[#555] text-sm mt-1">
           {offices.length} escritórios registrados
         </p>
 
-        <div className="mt-6 space-y-2">
+        <div className="mt-6 divide-y divide-[#222]">
           {offices.map((office) => (
             <div
               key={office.id}
-              className="flex items-center justify-between p-4 bg-city-navy/30 border border-city-navy-light rounded-lg"
+              className="flex items-center justify-between py-4"
             >
               <div className="min-w-0">
-                <h3 className="font-heading text-sm font-semibold text-white truncate">
+                <h3 className="text-white text-sm font-medium truncate">
                   {office.name}
                 </h3>
-                <p className="text-gray-500 text-xs font-mono">
+                <p className="text-[#555] text-xs mt-0.5">
                   {office.city}, {office.state} · Tier {office.tier}
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 shrink-0 ml-4">
-                {/* Verified toggle */}
+              <div className="flex items-center gap-2 shrink-0 ml-4">
                 <button
                   onClick={() => toggleVerified(office.id)}
-                  className={`px-3 py-1.5 rounded text-xs font-mono transition-colors ${
+                  className={`px-3 py-1.5 text-xs transition-colors border ${
                     office.verified
-                      ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-700/50'
-                      : 'bg-gray-800 text-gray-500 border border-gray-700'
+                      ? 'border-[#333] text-white'
+                      : 'border-[#222] text-[#555]'
                   }`}
                 >
                   {office.verified ? '✓ Verificado' : 'Não verificado'}
                 </button>
 
-                {/* Chat Jurídico toggle */}
                 <button
                   onClick={() => toggleChatJuridico(office.id)}
-                  className={`px-3 py-1.5 rounded text-xs font-mono transition-colors ${
+                  className={`px-3 py-1.5 text-xs transition-colors border ${
                     office.chat_juridico_client
-                      ? 'bg-city-gold/10 text-city-gold border border-city-gold/30'
-                      : 'bg-gray-800 text-gray-500 border border-gray-700'
+                      ? 'border-[#333] text-white'
+                      : 'border-[#222] text-[#555]'
                   }`}
                 >
-                  {office.chat_juridico_client
-                    ? '★ Chat Jurídico'
-                    : 'Sem Chat Jurídico'}
+                  {office.chat_juridico_client ? 'Chat Jurídico' : 'Sem Chat'}
                 </button>
               </div>
             </div>
