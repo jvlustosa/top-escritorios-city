@@ -634,7 +634,7 @@ export default function RegisterPage() {
                             {selectedAreas.length}/4 selecionadas
                           </span>
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                           {PRACTICE_AREAS.map((area) => {
                             const selected = selectedAreas.includes(area.id);
                             return (

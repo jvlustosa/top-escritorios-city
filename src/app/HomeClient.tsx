@@ -9,6 +9,41 @@ import MobileCardGrid from '@/components/MobileCardGrid';
 import SocialProofCounter from '@/components/SocialProofCounter';
 import GuidedTour from '@/components/GuidedTour';
 
+function MonitorIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="2" y="3" width="20" height="14" rx="2" />
+      <line x1="8" y1="21" x2="16" y2="21" />
+      <line x1="12" y1="17" x2="12" y2="21" />
+    </svg>
+  );
+}
+
+function DesktopMapNotice() {
+  return (
+    <div className="px-4 pt-2 pb-1 shrink-0">
+      <div className="flex items-start gap-3 rounded-lg border border-[#222] bg-[#0a0a0a] px-3 py-3">
+        <MonitorIcon className="w-9 h-9 text-[#5c5c5c] shrink-0 mt-0.5" />
+        <div>
+          <p className="text-white text-xs font-medium tracking-wide">Mapa em 3D — só no computador</p>
+          <p className="text-[#666] text-[11px] leading-snug mt-1">
+            Abra esta página no desktop para explorar a cidade interativa. Abaixo você navega a lista no celular.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CityLoadingScreen() {
   const [progress, setProgress] = useState(0);
 
@@ -167,8 +202,11 @@ export default function HomeClient() {
       </div>
 
       {isMobile ? (
-        <div className="pt-20 h-full overflow-y-auto">
-          <MobileCardGrid offices={offices} onSelectOffice={handleSelectOffice} />
+        <div className="pt-20 h-full overflow-y-auto flex flex-col">
+          <DesktopMapNotice />
+          <div className="flex-1 min-h-0">
+            <MobileCardGrid offices={offices} onSelectOffice={handleSelectOffice} />
+          </div>
         </div>
       ) : (
         <CityScene offices={offices} onSelectOffice={handleSelectOffice} timeOverride={timeMode} />
@@ -216,7 +254,7 @@ export default function HomeClient() {
         verified={offices.filter((f) => f.verified).length}
       />
 
-      <GuidedTour />
+      {!isMobile && <GuidedTour />}
 
     </main>
   );
